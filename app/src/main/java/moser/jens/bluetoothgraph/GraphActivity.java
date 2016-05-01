@@ -6,15 +6,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
-import com.jjoe64.graphview.series.Series;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Random;
 import java.util.UUID;
 
 public class GraphActivity extends AppCompatActivity {
@@ -29,6 +29,7 @@ public class GraphActivity extends AppCompatActivity {
     private byte[] readBuffer;
     private Thread workerThread;
     private GraphView graph;
+    private boolean pause;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,7 @@ public class GraphActivity extends AppCompatActivity {
 
                                     readBufferPosition = 0;
 
-                                    if (encodedBytes.length != 3) {
+                                    if (encodedBytes.length < 3) {
                                         continue;
                                     }
 
@@ -87,11 +88,13 @@ public class GraphActivity extends AppCompatActivity {
                                     handler.post(new Runnable() {
                                         public void run() {
                                             Log.d("Data", i1 + ", " + i2 + ", " + i3);
-                                            graph2LastXValue += 1d;
-                                            DataPoint dataPointA = new DataPoint(graph2LastXValue, i1);
-                                            DataPoint dataPointB = new DataPoint(graph2LastXValue, i2);
-                                            DataPoint dataPointC = new DataPoint(graph2LastXValue, i3);
-                                            graph.appendData(dataPointA, dataPointB, dataPointC);
+                                            if (!pause) {
+                                                graph2LastXValue += 1d;
+                                                DataPoint dataPointA = new DataPoint(graph2LastXValue, i1);
+                                                DataPoint dataPointB = new DataPoint(graph2LastXValue, i2);
+                                                DataPoint dataPointC = new DataPoint(graph2LastXValue, i3);
+                                                graph.appendData(dataPointA, dataPointB, dataPointC);
+                                            }
 
                                         }
                                     });
@@ -134,6 +137,31 @@ public class GraphActivity extends AppCompatActivity {
             mmSocket.close();
         } catch (Exception e) {
 
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.graph_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.pause:
+                pause = !pause;
+
+                if (pause) {
+                    item.setIcon(getResources().getDrawable(R.drawable.ic_play_arrow_white_24dp));
+                } else {
+                    item.setIcon(getResources().getDrawable(R.drawable.ic_pause_white_24dp));
+                }
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 }
