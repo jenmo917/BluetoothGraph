@@ -1,9 +1,6 @@
-package moser.jens.bluetoothgraph;
+package moser.jens.bluetoothgraph.connection;
 
 import android.bluetooth.BluetoothSocket;
-import android.util.Log;
-
-import com.jjoe64.graphview.series.DataPoint;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +15,8 @@ public class ConnectedThread extends Thread {
 
     public interface ConnectedListener {
         void obtainMessage(byte[] message);
+
+        void onConnectedFailure(Exception e);
     }
 
     public ConnectedThread(BluetoothSocket socket, ConnectedListener connectedListener) {
@@ -31,7 +30,9 @@ public class ConnectedThread extends Thread {
         try {
             tmpIn = socket.getInputStream();
             tmpOut = socket.getOutputStream();
-        } catch (IOException e) { }
+        } catch (IOException e) {
+            connectedListener.onConnectedFailure(e);
+        }
 
         mmInStream = tmpIn;
         mmOutStream = tmpOut;
@@ -43,41 +44,41 @@ public class ConnectedThread extends Thread {
         byte[] readBuffer = new byte[1024];
         while (true) {
             try {
-                    int bytesAvailable = mmInStream.available();
-                    if (bytesAvailable > 0) {
-                        byte[] packetBytes = new byte[bytesAvailable];
-                        mmInStream.read(packetBytes);
+                int bytesAvailable = mmInStream.available();
+                if (bytesAvailable > 0) {
+                    byte[] packetBytes = new byte[bytesAvailable];
+                    mmInStream.read(packetBytes);
 
-                        for (int i = 0; i < bytesAvailable; i++) {
-                            byte b = packetBytes[i];
-                            if (b == delimiter) {
-                                byte[] encodedBytes = new byte[readBufferPosition];
-                                System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+                    for (int i = 0; i < bytesAvailable; i++) {
+                        byte b = packetBytes[i];
+                        if (b == delimiter) {
+                            byte[] encodedBytes = new byte[readBufferPosition];
+                            System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
 
-                                readBufferPosition = 0;
+                            readBufferPosition = 0;
 
-                                if (encodedBytes.length < 3) {
-                                    continue;
-                                }
-                                // Send the obtained bytes to the UI activity
-                                connectedListener.obtainMessage(encodedBytes);
-                            } else {
-                                readBuffer[readBufferPosition++] = b;
+                            if (encodedBytes.length < 3) {
+                                continue;
                             }
+                            connectedListener.obtainMessage(encodedBytes);
+                        } else {
+                            readBuffer[readBufferPosition++] = b;
                         }
                     }
+                }
             } catch (IOException e) {
                 break;
             }
         }
     }
 
-    /* Call this from the main activity to shutdown the connection */
     public void cancel() {
         try {
             mmOutStream.close();
             mmInStream.close();
             mmSocket.close();
-        } catch (IOException e) { }
+        } catch (IOException e) {
+            connectedListener.onConnectedFailure(e);
+        }
     }
 }

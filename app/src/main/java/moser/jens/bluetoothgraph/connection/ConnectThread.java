@@ -1,4 +1,4 @@
-package moser.jens.bluetoothgraph;
+package moser.jens.bluetoothgraph.connection;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -10,12 +10,12 @@ import java.util.UUID;
 public class ConnectThread extends Thread {
 
     private final BluetoothSocket socket;
-    private final BluetoothDevice device;
     private final BluetoothAdapter bluetoothAdapter;
     private final ConnectListener connectListener;
 
     public interface ConnectListener {
         void onConnected(BluetoothSocket socket);
+        void onConnectFailure(Exception e);
     }
 
     public ConnectThread(BluetoothDevice device, BluetoothAdapter bluetoothAdapter, UUID uuid, ConnectThread.ConnectListener connectListener) {
@@ -26,11 +26,12 @@ public class ConnectThread extends Thread {
 
         this.connectListener = connectListener;
         this.bluetoothAdapter = bluetoothAdapter;
-        this.device = device;
 
         try {
             tmp = device.createRfcommSocketToServiceRecord(uuid);
-        } catch (IOException e) {}
+        } catch (IOException e) {
+            connectListener.onConnectFailure(e);
+        }
         socket = tmp;
     }
 
@@ -47,7 +48,9 @@ public class ConnectThread extends Thread {
             // Unable to connect; close the socket and get out
             try {
                 socket.close();
-            } catch (IOException closeException) { }
+            } catch (IOException e) {
+                connectListener.onConnectFailure(e);
+            }
             return;
         }
 
@@ -58,6 +61,8 @@ public class ConnectThread extends Thread {
     public void cancel() {
         try {
             socket.close();
-        } catch (IOException e) { }
+        } catch (IOException e) {
+            connectListener.onConnectFailure(e);
+        }
     }
 }

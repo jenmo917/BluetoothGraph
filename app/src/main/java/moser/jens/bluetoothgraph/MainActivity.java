@@ -81,9 +81,6 @@ public class MainActivity extends AppCompatActivity {
         if (!blueToothAdapter.isEnabled()) {
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(turnOn, 0);
-            Toast.makeText(getApplicationContext(), "Bluetooth was disabled, now enabled", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Bluetooth is enabled", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -97,8 +94,6 @@ public class MainActivity extends AppCompatActivity {
 
         for (BluetoothDevice bt : pairedDevices)
             this.pairedDeviceNames.add(bt.getName());
-
-        Toast.makeText(getApplicationContext(), "Showing Paired Devices", Toast.LENGTH_SHORT).show();
 
         final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, pairedDeviceNames);
 

@@ -1,4 +1,4 @@
-package moser.jens.bluetoothgraph;
+package moser.jens.bluetoothgraph.view;
 
 import android.content.Context;
 import android.graphics.Color;

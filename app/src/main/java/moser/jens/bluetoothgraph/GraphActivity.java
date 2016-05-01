@@ -15,6 +15,11 @@ import com.jjoe64.graphview.series.DataPoint;
 
 import java.util.UUID;
 
+import moser.jens.bluetoothgraph.connection.ConnectThread;
+import moser.jens.bluetoothgraph.connection.ConnectedThread;
+import moser.jens.bluetoothgraph.view.GraphView;
+import moser.jens.bluetoothgraph.view.LoadingLayout;
+
 public class GraphActivity extends AppCompatActivity {
 
     private static final String UUID_STRING = "00001101-0000-1000-8000-00805F9B34FB"; //Standard SerialPortService ID
@@ -25,14 +30,28 @@ public class GraphActivity extends AppCompatActivity {
     private BluetoothAdapter blueToothAdapter;
     private ConnectedThread connectedThread;
     private ConnectThread connectThread;
+    private LoadingLayout loadingLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_graph);
+
         graph = (GraphView) findViewById(R.id.graph);
+        loadingLayout = (LoadingLayout) findViewById(R.id.loading_layout);
+
+        loadingLayout.setLoadingListener(new LoadingLayout.LoadingListener() {
+            @Override
+            public void OnRetryPressed() {
+                disconnectBT();
+                connectBT();
+            }
+        });
+
         bluetoothDevice = getIntent().getParcelableExtra(MainActivity.BLUETOOTH_DEVICE);
         blueToothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        loadingLayout.loadingStart();
     }
 
     @Override
@@ -55,6 +74,7 @@ public class GraphActivity extends AppCompatActivity {
                 ConnectedThread.ConnectedListener connectedListener = new ConnectedThread.ConnectedListener() {
                     @Override
                     public void obtainMessage(byte[] encodedBytes) {
+
                         if (!pause) {
                             final int i1 = encodedBytes[0];
                             final int i2 = encodedBytes[1];
@@ -63,6 +83,7 @@ public class GraphActivity extends AppCompatActivity {
                             handler.post(new Runnable() {
                                 public void run() {
                                     Log.d("Data", i1 + ", " + i2 + ", " + i3);
+                                    loadingLayout.loadingSuccesssfull();
                                     if (!pause) {
                                         graph2LastXValue += 1d;
                                         DataPoint dataPointA = new DataPoint(graph2LastXValue, i1);
@@ -76,9 +97,27 @@ public class GraphActivity extends AppCompatActivity {
 
                         }
                     }
+
+                    @Override
+                    public void onConnectedFailure(final Exception e) {
+                        handler.post(new Runnable() {
+                            public void run() {
+                                loadingLayout.loadingFailed(e.getCause().getMessage());
+                            }
+                        });
+                    }
                 };
                 connectedThread = new ConnectedThread(socket, connectedListener);
                 connectedThread.start();
+            }
+
+            @Override
+            public void onConnectFailure(final Exception e) {
+                handler.post(new Runnable() {
+                    public void run() {
+                        loadingLayout.loadingFailed(e.getCause().getMessage());
+                    }
+                });
             }
         };
 
@@ -88,8 +127,10 @@ public class GraphActivity extends AppCompatActivity {
     }
 
     private void disconnectBT() {
-        connectThread.cancel();
-        connectedThread.cancel();
+        if (connectThread != null)
+            connectThread.cancel();
+        if (connectedThread != null)
+            connectedThread.cancel();
     }
 
     @Override
