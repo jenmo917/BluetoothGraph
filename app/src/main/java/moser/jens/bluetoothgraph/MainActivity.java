@@ -1,5 +1,6 @@
 package moser.jens.bluetoothgraph;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
@@ -19,9 +20,9 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity {
+import moser.jens.bluetoothgraph.util.NavigationUtil;
 
-    public static final String BLUETOOTH_DEVICE = "BLUETOOTH_DEVICE";
+public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter blueToothAdapter;
 
@@ -104,18 +105,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
                 BluetoothDevice bluetoothDevice = MainActivity.this.pairedDevices.get(arg2);
-                startGraphActivity(bluetoothDevice);
+                NavigationUtil.startGraphActivity(MainActivity.this, bluetoothDevice);
             }
         });
-    }
-
-    private void startGraphActivity(BluetoothDevice bluetoothDevice) {
-        Intent intent = new Intent(MainActivity.this, GraphActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(BLUETOOTH_DEVICE, bluetoothDevice);
-        intent.putExtras(bundle);
-        intent.putExtras(bundle);
-        startActivity(intent, bundle);
     }
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {

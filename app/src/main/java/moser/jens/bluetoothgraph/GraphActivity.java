@@ -21,6 +21,7 @@ import java.util.UUID;
 
 import moser.jens.bluetoothgraph.connection.ConnectThread;
 import moser.jens.bluetoothgraph.connection.ConnectedThread;
+import moser.jens.bluetoothgraph.util.NavigationUtil;
 import moser.jens.bluetoothgraph.view.GraphView;
 import moser.jens.bluetoothgraph.view.LoadingLayout;
 
@@ -52,7 +53,7 @@ public class GraphActivity extends AppCompatActivity {
             }
         });
 
-        bluetoothDevice = getIntent().getParcelableExtra(MainActivity.BLUETOOTH_DEVICE);
+        bluetoothDevice = getIntent().getParcelableExtra(NavigationUtil.BLUETOOTH_DEVICE);
         blueToothAdapter = BluetoothAdapter.getDefaultAdapter();
     }
 
