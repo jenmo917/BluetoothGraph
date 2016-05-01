@@ -56,8 +56,10 @@ public class GraphView extends com.jjoe64.graphview.GraphView {
         getViewport().setMinX(0);
         getViewport().setMaxX(100);
 
+
+        getViewport().setYAxisBoundsManual(true);
         getViewport().setMinY(0);
-        getViewport().setMaxY(60);
+        getViewport().setMaxY(80);
 
         getViewport().setScalable(true);
         getViewport().setScrollable(true);
