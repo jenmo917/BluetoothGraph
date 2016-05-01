@@ -9,10 +9,9 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="moser.jens.bluetoothgraph.MainActivity">
 
-    <ListView
-        android:id="@+id/listview_lv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-    </ListView>
+    <moser.jens.bluetoothgraph.GraphView
+        android:id="@+id/graph"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

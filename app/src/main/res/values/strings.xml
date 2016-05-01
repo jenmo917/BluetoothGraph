@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BluetoothGraph</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
 </resources>
