@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -26,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter blueToothAdapter;
 
-    private ListView lv;
+    private ListView listView;
     private ArrayList<BluetoothDevice> pairedDevices;
     private ArrayList<String> pairedDeviceNames;
 
@@ -41,20 +40,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Use this check to determine whether BLE is supported on the device.  Then you can
-        // selectively disable BLE-related features.
+
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
             Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
             finish();
         }
 
-        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
-        // BluetoothAdapter through BluetoothManager.
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         blueToothAdapter = bluetoothManager.getAdapter();
 
-        // Checks if Bluetooth is supported on the device.
         if (blueToothAdapter == null) {
             Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
             finish();
@@ -79,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void findViews() {
-        lv = (ListView) findViewById(R.id.listview_lv);
+        listView = (ListView) findViewById(R.id.listview_lv);
     }
 
     private void enableBlueTooth() {
@@ -107,20 +102,16 @@ public class MainActivity extends AppCompatActivity {
 
         final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, pairedDeviceNames);
 
-        lv.setAdapter(adapter);
+        listView.setAdapter(adapter);
 
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-
                 BluetoothDevice bluetoothDevice = MainActivity.this.pairedDevices.get(arg2);
                 startGraphActivity(bluetoothDevice);
-                Log.d("############", "Position clicked: " + arg2 + " (" + bluetoothDevice.getName() + ")");
             }
-
         });
-
     }
 
     private void startGraphActivity(BluetoothDevice bluetoothDevice) {
@@ -132,16 +123,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent, bundle);
     }
 
-    /**
-     * The BroadcastReceiver that listens for discovered devices and changes the title when
-     * discovery is finished
-     */
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            // When discovery finds a device
             if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
                 list();
             }

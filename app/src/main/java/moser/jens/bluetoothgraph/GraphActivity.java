@@ -19,7 +19,6 @@ import java.util.UUID;
 
 public class GraphActivity extends AppCompatActivity {
 
-    private final Handler mHandler = new Handler();
     private double graph2LastXValue = 5d;
     private BluetoothDevice bluetoothDevice;
     private BluetoothSocket mmSocket;
@@ -29,9 +28,7 @@ public class GraphActivity extends AppCompatActivity {
     private int readBufferPosition;
     private byte[] readBuffer;
     private Thread workerThread;
-    private Runnable mTimer1;
     private GraphView graph;
-    private Runnable mTimer2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,19 +40,7 @@ public class GraphActivity extends AppCompatActivity {
         bluetoothDevice = getIntent().getParcelableExtra(MainActivity.BLUETOOTH_DEVICE);
 
         Log.d("#######", bluetoothDevice.getName());
-        try {
-            openBT();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
-
-    double mLastRandom = 2;
-    Random mRand = new Random();
-    private double getRandom() {
-        return mLastRandom += mRand.nextDouble()*0.5 - 0.25;
-    }
-
 
     void openBT() throws IOException {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //Standard SerialPortService ID
@@ -82,17 +67,32 @@ public class GraphActivity extends AppCompatActivity {
                         if (bytesAvailable > 0) {
                             byte[] packetBytes = new byte[bytesAvailable];
                             mmInputStream.read(packetBytes);
+
                             for (int i = 0; i < bytesAvailable; i++) {
                                 byte b = packetBytes[i];
                                 if (b == delimiter) {
                                     byte[] encodedBytes = new byte[readBufferPosition];
                                     System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
-                                    final String data = new String(encodedBytes, "UTF-8");
+
                                     readBufferPosition = 0;
+
+                                    if (encodedBytes.length != 3) {
+                                        continue;
+                                    }
+
+                                    final int i1 = encodedBytes[0];
+                                    final int i2 = encodedBytes[1];
+                                    final int i3 = encodedBytes[2];
 
                                     handler.post(new Runnable() {
                                         public void run() {
-                                            Log.d("Data", data);
+                                            Log.d("Data", i1 + ", " + i2 + ", " + i3);
+                                            graph2LastXValue += 1d;
+                                            DataPoint dataPointA = new DataPoint(graph2LastXValue, i1);
+                                            DataPoint dataPointB = new DataPoint(graph2LastXValue, i2);
+                                            DataPoint dataPointC = new DataPoint(graph2LastXValue, i3);
+                                            graph.appendData(dataPointA, dataPointB, dataPointC);
+
                                         }
                                     });
                                 } else {
@@ -113,24 +113,16 @@ public class GraphActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mTimer2 = new Runnable() {
-            @Override
-            public void run() {
-                graph2LastXValue += 1d;
-                DataPoint dataPointA = new DataPoint(graph2LastXValue, getRandom());
-                DataPoint dataPointB = new DataPoint(graph2LastXValue, getRandom());
-                DataPoint dataPointC = new DataPoint(graph2LastXValue, getRandom());
-                graph.appendData(dataPointA, dataPointB, dataPointC);
-                mHandler.postDelayed(this, 20);
-            }
-        };
-        mHandler.postDelayed(mTimer2, 1000);
+        try {
+            openBT();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mHandler.removeCallbacks(mTimer2);
         closeBT();
     }
 
