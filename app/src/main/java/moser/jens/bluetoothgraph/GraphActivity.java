@@ -3,6 +3,10 @@ package moser.jens.bluetoothgraph;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -50,23 +54,31 @@ public class GraphActivity extends AppCompatActivity {
 
         bluetoothDevice = getIntent().getParcelableExtra(MainActivity.BLUETOOTH_DEVICE);
         blueToothAdapter = BluetoothAdapter.getDefaultAdapter();
+    }
 
-        loadingLayout.loadingStart();
+    private void registerReceiver() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        registerReceiver(blueToothDisconnectedReceiver, filter);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver();
         connectBT();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(blueToothDisconnectedReceiver);
         disconnectBT();
     }
 
     private void connectBT() {
+        loadingLayout.loadingStart();
         final Handler handler = new Handler();
         ConnectThread.ConnectListener connectListener = new ConnectThread.ConnectListener() {
             @Override
@@ -102,7 +114,7 @@ public class GraphActivity extends AppCompatActivity {
                     public void onConnectedFailure(final Exception e) {
                         handler.post(new Runnable() {
                             public void run() {
-                                loadingLayout.loadingFailed(e.getCause().getMessage());
+                                loadingLayout.loadingFailed(e.getMessage());
                             }
                         });
                     }
@@ -115,7 +127,7 @@ public class GraphActivity extends AppCompatActivity {
             public void onConnectFailure(final Exception e) {
                 handler.post(new Runnable() {
                     public void run() {
-                        loadingLayout.loadingFailed(e.getCause().getMessage());
+                        loadingLayout.loadingFailed(e.getMessage());
                     }
                 });
             }
@@ -132,6 +144,13 @@ public class GraphActivity extends AppCompatActivity {
         if (connectedThread != null)
             connectedThread.cancel();
     }
+
+    private final BroadcastReceiver blueToothDisconnectedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            loadingLayout.loadingFailed(getResources().getString(R.string.error_bluetooth_connection_lost));
+        }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

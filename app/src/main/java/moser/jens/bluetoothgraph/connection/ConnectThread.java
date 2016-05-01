@@ -46,11 +46,10 @@ public class ConnectThread extends Thread {
             socket.connect();
         } catch (IOException connectException) {
             // Unable to connect; close the socket and get out
+            connectListener.onConnectFailure(connectException);
             try {
                 socket.close();
-            } catch (IOException e) {
-                connectListener.onConnectFailure(e);
-            }
+            } catch (IOException e) {}
             return;
         }
 

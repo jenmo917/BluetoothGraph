@@ -3,5 +3,6 @@
     <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
     <string name="pause">Pause</string>
     <string name="retry">Retry</string>
-    <string name="retry_message">Retry</string>
+    <string name="retry_message">Something went wrong</string>
+    <string name="error_bluetooth_connection_lost">Bluetooth connection lost</string>
 </resources>
